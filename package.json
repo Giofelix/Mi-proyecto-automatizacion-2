@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test:api": "newman run postman-collections/collections/API_Automation_Project_collection.json -g postman-collections/environments/workspace.postman_globals.json --reporters cli,json --reporter-json-export api-test-results.json",
+    "test:api": "newman run postman-collections/collections/API_Automation_Project_collection.json -g postman-collections/environments/workspace.postman_globals.json --reporters cli,json --reporter-json-export api-test-results.json -r htmlextra --reporter-htmlextra-export",
     "test:ui": "npx playwright test --reporter=html,json"
   },
   "keywords": [],
