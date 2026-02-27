@@ -1,0 +1,52 @@
+name: Ejecutar Suite de Pruebas Automatizadas
+
+on:
+  push:
+    branches: [ main ] # Se ejecuta al hacer push a main
+  pull_request:
+    branches: [ main ] # Se ejecuta al crear un PR hacia main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest # Usa la última versión de Ubuntu
+
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # O la versión LTS que uses
+          cache: 'npm' # Cachea las dependencias de npm para acelerar
+
+      - name: Instalar dependencias
+        run: npm ci # npm ci es más rápido y fiable para CI que npm install
+
+      - name: Instalar Navegadores de Playwright
+        run: npx playwright install --with-deps chromium # Instala solo chromium y sus dependencias del sistema para ahorrar tiempo
+
+      - name: Ejecutar Pruebas de API (Postman/Newman)
+        run: npm run test:api
+        # Podríamos subir el reporte JSON como artefacto después
+        continue-on-error: true # Permite que el workflow continúe aunque fallen las APIs, para también ejecutar las UI
+
+      - name: Ejecutar Pruebas de UI (Playwright)
+        run: npm run test:ui
+        continue-on-error: true
+
+      - name: Subir Reporte de Playwright como Artefacto
+        uses: actions/upload-artifact@v4
+        if: always() # Se ejecuta incluso si los pasos anteriores fallaron
+        with:
+          name: playwright-report
+          path: playwright-report/ # La carpeta donde Playwright guarda el reporte HTML por defecto
+          retention-days: 30
+
+      - name: Subir Reporte de Newman como Artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: newman-report
+          path: api-test-results.json
+          retention-days: 30
